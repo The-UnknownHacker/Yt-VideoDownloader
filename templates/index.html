@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h1 {
+            color: #ff0000;
+        }
+        form {
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 600px;
+            background-color: #2e2e2e;
+            border-radius: 10px;
+        }
+        label {
+            font-size: 1.2em;
+        }
+        input, select, button {
+            font-size: 1em;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #ff0000;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        #loading {
+            display: none;
+            color: #ff0000;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video Downloader</h1>
+    <form id="video-form" method="POST">
+        <label for="url">Video URL:</label>
+        <input type="text" id="url" name="url" required><br><br>
+        
+        <button type="button" onclick="fetchVideoInfo()">Get Info</button><br><br>
+        
+        <div id="info-section" style="display: none;">
+            <label for="format">Choose format:</label>
+            <select id="format" name="format" required></select><br><br>
+            
+            <label for="resolution">Choose resolution:</label>
+            <select id="resolution" name="resolution" required></select><br><br>
+            
+            <button type="submit" onclick="delayRedirect()">Download</button>
+        </div>
+    </form>
+
+    <div id="loading">Downloading... Please wait...</div>
+
+    <script>
+        async function fetchVideoInfo() {
+            const url = document.getElementById('url').value;
+            const infoSection = document.getElementById('info-section');
+            const formatSelect = document.getElementById('format');
+            const resolutionSelect = document.getElementById('resolution');
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5001/get_info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ 'url': url })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Populate format options
+                formatSelect.innerHTML = '';
+                data.formats.forEach(format => {
+                    const option = document.createElement('option');
+                    option.value = format;
+                    option.textContent = format;
+                    formatSelect.appendChild(option);
+                });
+
+                // Populate resolution options
+                resolutionSelect.innerHTML = '';
+                data.resolutions.forEach(resolution => {
+                    const option = document.createElement('option');
+                    option.value = resolution;
+                    option.textContent = resolution;
+                    resolutionSelect.appendChild(option);
+                });
+
+                infoSection.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function delayRedirect() {
+            document.getElementById('loading').style.display = 'block';
+            setTimeout(function() {
+                window.location.href = "/success";
+            }, 10000);
+        }
+    </script>
+</body>
+</html>
